@@ -31,11 +31,11 @@ public class Schedule {
     @CreatedDate
     @Column(updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
     @LastModifiedDate
     @Column
     @Temporal(TemporalType.TIMESTAMP)
-    private LocalDateTime modifiedAt;
+    private LocalDateTime modifiedAt = LocalDateTime.now();
 
     public Schedule(ScheduleRequestDto requestDto) {
         this.title = requestDto.getTitle();
@@ -49,5 +49,6 @@ public class Schedule {
         this.contents = requestDto.getContents();
         this.manager = requestDto.getManager();
         this.password = requestDto.getPassword();
+        this.modifiedAt = LocalDateTime.now();
     }
 }

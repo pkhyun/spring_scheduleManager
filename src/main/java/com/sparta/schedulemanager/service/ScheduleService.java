@@ -5,6 +5,7 @@ import com.sparta.schedulemanager.dto.ScheduleResponseDto;
 import com.sparta.schedulemanager.entity.Schedule;
 import com.sparta.schedulemanager.repository.ScheduleRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -17,7 +18,7 @@ public class ScheduleService {
         this.scheduleRepository = scheduleRepository;
     }
 
-    public ScheduleResponseDto createSchedule(ScheduleRequestDto requestDto) {
+    public ScheduleResponseDto createSchedule(ScheduleRequestDto requestDto) { // 일정 생성
         Schedule schedule = new Schedule(requestDto);
         Schedule savedSchedule = scheduleRepository.save(schedule);
         return new ScheduleResponseDto(schedule);
@@ -29,9 +30,10 @@ public class ScheduleService {
     }
 
     public List<ScheduleResponseDto> getSchedules() { // 전체 일정 조회
-        return scheduleRepository.findAll().stream().map(ScheduleResponseDto::new).toList();
+        return scheduleRepository.findAllByOrderByModifiedAtDesc().stream().map(ScheduleResponseDto::new).toList();
     }
 
+    @Transactional
     public ScheduleResponseDto updateSchedule(int id, ScheduleRequestDto requestDto) { //선택 일정 수정
         Schedule schedule = findScheduleById(id);
         if (checkPassword(schedule, requestDto)) {
