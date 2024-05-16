@@ -5,6 +5,7 @@ import com.sparta.schedulemanager.dto.ScheduleResponseDto;
 import com.sparta.schedulemanager.entity.Schedule;
 import com.sparta.schedulemanager.repository.ScheduleRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -32,6 +33,7 @@ public class ScheduleService {
         return scheduleRepository.findAll().stream().map(ScheduleResponseDto::new).toList();
     }
 
+    @Transactional
     public ScheduleResponseDto updateSchedule(int id, ScheduleRequestDto requestDto) { //선택 일정 수정
         Schedule schedule = findScheduleById(id);
         if (checkPassword(schedule, requestDto)) {
