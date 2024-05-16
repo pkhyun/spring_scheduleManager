@@ -18,27 +18,27 @@ public class ScheduleController {
     }
 
     @PostMapping("/schedule")
-    public ScheduleResponseDto createSchedule(@RequestBody ScheduleRequestDto requestDto) {
+    public ScheduleResponseDto createSchedule(@RequestBody ScheduleRequestDto requestDto) { // 일정 생성
         return scheduleService.createSchedule(requestDto);
     }
 
     @GetMapping("/schedule/{id}")
-    public ScheduleResponseDto getSchedule(@PathVariable int id) {
+    public ScheduleResponseDto getSchedule(@PathVariable int id) { // 선택 일정 조회
         return scheduleService.getSchedule(id);
     }
 
     @GetMapping("/schedules")
-    public List<ScheduleResponseDto> getSchedules() {
+    public List<ScheduleResponseDto> getSchedules() { // 전체 일정 조회
         return scheduleService.getSchedules();
     }
 
     @PutMapping("/schedule/{id}")
-    public ScheduleResponseDto updateSchedule(@PathVariable int id, @RequestBody ScheduleRequestDto requestDto) {
+    public ScheduleResponseDto updateSchedule(@PathVariable int id, @RequestBody ScheduleRequestDto requestDto) { // 선택 일정 수정
         return scheduleService.updateSchedule(id, requestDto);
     }
 
     @DeleteMapping("/schedule/{id}")
-    public void deleteSchedule(@PathVariable int id, @RequestBody ScheduleRequestDto requestDto) {
+    public void deleteSchedule(@PathVariable int id, @RequestBody ScheduleRequestDto requestDto) { // 선택 일정 삭제
         scheduleService.deleteSchedule(id, requestDto);
     }
 

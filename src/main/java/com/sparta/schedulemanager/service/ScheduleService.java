@@ -17,7 +17,7 @@ public class ScheduleService {
         this.scheduleRepository = scheduleRepository;
     }
 
-    public ScheduleResponseDto createSchedule(ScheduleRequestDto requestDto) {
+    public ScheduleResponseDto createSchedule(ScheduleRequestDto requestDto) { // 일정 생성
         Schedule schedule = new Schedule(requestDto);
         Schedule savedSchedule = scheduleRepository.save(schedule);
         return new ScheduleResponseDto(schedule);
