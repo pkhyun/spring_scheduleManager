@@ -3,8 +3,10 @@ package com.sparta.schedulemanager.controller;
 import com.sparta.schedulemanager.dto.ScheduleRequestDto;
 import com.sparta.schedulemanager.dto.ScheduleResponseDto;
 import com.sparta.schedulemanager.service.ScheduleService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,7 +22,7 @@ public class ScheduleController {
     }
 
     @PostMapping("/schedule")
-    public ScheduleResponseDto createSchedule(@RequestBody ScheduleRequestDto requestDto) { // 일정 생성
+    public ScheduleResponseDto createSchedule(@Valid @RequestBody ScheduleRequestDto requestDto) { // 일정 생성
         return scheduleService.createSchedule(requestDto);
     }
 
@@ -35,7 +37,7 @@ public class ScheduleController {
     }
 
     @PutMapping("/schedule/{id}")
-    public ScheduleResponseDto updateSchedule(@PathVariable int id, @RequestBody ScheduleRequestDto requestDto) { // 선택 일정 수정
+    public ScheduleResponseDto updateSchedule(@PathVariable int id, @Valid @RequestBody ScheduleRequestDto requestDto) { // 선택 일정 수정
         return scheduleService.updateSchedule(id, requestDto);
     }
 
@@ -44,10 +46,14 @@ public class ScheduleController {
         scheduleService.deleteSchedule(id, requestDto);
     }
 
-    @ExceptionHandler // 예외처리문
+    @ExceptionHandler // 에러 핸들링
     private ResponseEntity<String> handleException(IllegalArgumentException e) {
         return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler // 유효성 검사 에러 핸들링
+    private ResponseEntity<String> handleException(MethodArgumentNotValidException e) {
+        return new ResponseEntity<>(e.getBindingResult().getFieldError().getDefaultMessage(), HttpStatus.BAD_REQUEST);
+    }
 
 }
