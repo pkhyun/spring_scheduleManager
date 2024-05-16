@@ -30,7 +30,7 @@ public class ScheduleService {
     }
 
     public List<ScheduleResponseDto> getSchedules() { // 전체 일정 조회
-        return scheduleRepository.findAll().stream().map(ScheduleResponseDto::new).toList();
+        return scheduleRepository.findAllByOrderByModifiedAtDesc().stream().map(ScheduleResponseDto::new).toList();
     }
 
     @Transactional
