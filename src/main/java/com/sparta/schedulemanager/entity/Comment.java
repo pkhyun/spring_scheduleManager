@@ -1,8 +1,9 @@
 package com.sparta.schedulemanager.entity;
 
-import com.sparta.schedulemanager.dto.ScheduleRequestDto;
+import com.sparta.schedulemanager.dto.CommentRequestDto;
 import jakarta.persistence.Entity;
 import jakarta.persistence.*;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,29 +11,26 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Getter
 @Setter
-@Table(name = "schedule") // schedule 테이블 생성
+@Table(name = "comment")
 @NoArgsConstructor
-public class Schedule {
+public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
-
-    @Column(name = "title", nullable = false, length = 50)
-    private String title;
+    private int commentId;
 
     @Column(name = "contents", nullable = false)
     private String contents;
 
-    @Column(name = "manager", nullable = false, length = 50)
-    private String manager;
+    @Column(name = "user_id", nullable = false)
+    private String userId;
 
-    @Column(name = "password", nullable = false, length = 50)
-    private String password;
+    @ManyToOne
+    @JoinColumn(name = "schedule_id", nullable = false)
+    private Schedule schedule;
 
     @CreatedDate
     @Column(updatable = false)
@@ -44,21 +42,13 @@ public class Schedule {
     @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime modifiedAt = LocalDateTime.now();
 
-    @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Comment> comments;
-
-    public Schedule(ScheduleRequestDto requestDto) {
-        this.title = requestDto.getTitle();
+    public Comment(CommentRequestDto requestDto){
         this.contents = requestDto.getContents();
-        this.manager = requestDto.getManager();
-        this.password = requestDto.getPassword();
     }
 
-    public void update(ScheduleRequestDto requestDto) {
-        this.title = requestDto.getTitle();
+    public void update(CommentRequestDto requestDto){
         this.contents = requestDto.getContents();
-        this.manager = requestDto.getManager();
-        this.password = requestDto.getPassword();
         this.modifiedAt = LocalDateTime.now();
     }
+
 }
