@@ -1,6 +1,7 @@
 package com.sparta.schedulemanager.entity;
 
 import com.sparta.schedulemanager.dto.CommentRequestDto;
+import com.sparta.schedulemanager.dto.CommentResponseDto;
 import jakarta.persistence.Entity;
 import jakarta.persistence.*;
 import jakarta.persistence.Table;
@@ -25,10 +26,10 @@ public class Comment {
     @Column(name = "contents", nullable = false)
     private String contents;
 
-    @Column(name = "user_id", nullable = false)
-    private String userId;
+//    @Column(name = "user_id")
+//    private String userId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "schedule_id", nullable = false)
     private Schedule schedule;
 
@@ -42,9 +43,12 @@ public class Comment {
     @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime modifiedAt = LocalDateTime.now();
 
-    public Comment(CommentRequestDto requestDto){
+    public Comment(CommentRequestDto requestDto, Schedule schedule){
         this.contents = requestDto.getContents();
+        this.schedule = schedule;
     }
+
+
 
     public void update(CommentRequestDto requestDto){
         this.contents = requestDto.getContents();
