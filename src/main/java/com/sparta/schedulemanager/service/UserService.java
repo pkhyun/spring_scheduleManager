@@ -16,9 +16,8 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-
     // ADMIN_TOKEN
-    private final String ADMIN_TOKEN = "adminToken";
+    private final String ADMIN_TOKEN = "AAABnvxRVklrnYxKZ0aHgTBcXukeZygoC";
 
     public void signup(SignupRequestDto requestDto) {
         String username = requestDto.getUsername();
