@@ -4,6 +4,7 @@ import com.sparta.schedulemanager.dto.CommentRequestDto;
 import com.sparta.schedulemanager.dto.CommentResponseDto;
 import com.sparta.schedulemanager.entity.Comment;
 import com.sparta.schedulemanager.entity.Schedule;
+import com.sparta.schedulemanager.entity.User;
 import com.sparta.schedulemanager.repository.CommentRepository;
 import com.sparta.schedulemanager.repository.ScheduleRepository;
 import org.springframework.http.ResponseEntity;
@@ -22,19 +23,21 @@ public class CommentService {
     }
 
     // 댓글 생성
-    public CommentResponseDto createComment(int scheduleId, CommentRequestDto requestDto) {
+    public CommentResponseDto createComment(int scheduleId, CommentRequestDto requestDto, User user) {
         Schedule schedule = scheduleRepository.getReferenceById(scheduleId);
-        Comment comment = new Comment(requestDto, schedule);
+        Comment comment = new Comment(requestDto, schedule, user);
         Comment savedComment = commentRepository.save(comment);
         return new CommentResponseDto(comment);
     }
 
     // 댓글 수정
     @Transactional
-    public CommentResponseDto updateComment(int id, CommentRequestDto requestDto) {
+    public CommentResponseDto updateComment(int id, CommentRequestDto requestDto, User user) {
         Comment comment = findCommentById(id);
-        comment.update(requestDto);
-        return new CommentResponseDto(comment);
+        if (comment.getUser().getId() == user.getId()) {
+            comment.update(requestDto);
+            return new CommentResponseDto(comment);
+        } else throw new IllegalArgumentException("본인 댓글만 수정할 수 있습니다.");
     }
 
     // 댓글 삭제

@@ -26,8 +26,9 @@ public class Comment {
     @Column(name = "contents", nullable = false)
     private String contents;
 
-//    @Column(name = "user_id")
-//    private String userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "schedule_id", nullable = false)
@@ -43,9 +44,10 @@ public class Comment {
     @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime modifiedAt = LocalDateTime.now();
 
-    public Comment(CommentRequestDto requestDto, Schedule schedule){
+    public Comment(CommentRequestDto requestDto, Schedule schedule, User user){
         this.contents = requestDto.getContents();
         this.schedule = schedule;
+        this.user = user;
     }
 
 

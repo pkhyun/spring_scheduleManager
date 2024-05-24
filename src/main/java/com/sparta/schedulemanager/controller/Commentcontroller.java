@@ -2,10 +2,12 @@ package com.sparta.schedulemanager.controller;
 
 import com.sparta.schedulemanager.dto.CommentRequestDto;
 import com.sparta.schedulemanager.dto.CommentResponseDto;
+import com.sparta.schedulemanager.security.UserDetailsImpl;
 import com.sparta.schedulemanager.service.CommentService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,14 +23,14 @@ public class Commentcontroller {
 
     // 댓글 생성
     @PostMapping("/comment/{scheduleId}")
-    public CommentResponseDto createComment(@PathVariable int scheduleId, @Valid @RequestBody CommentRequestDto requestDto) {
-        return commentService.createComment(scheduleId, requestDto);
+    public CommentResponseDto createComment(@PathVariable int scheduleId, @Valid @RequestBody CommentRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return commentService.createComment(scheduleId, requestDto, userDetails.getUser());
     }
 
     // 선택 댓글 수정
     @PutMapping("/comment/{id}")
-    public CommentResponseDto updateComment(@PathVariable int id, @Valid @RequestBody CommentRequestDto requestDto) {
-        return commentService.updateComment(id, requestDto);
+    public CommentResponseDto updateComment(@PathVariable int id, @Valid @RequestBody CommentRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return commentService.updateComment(id, requestDto, userDetails.getUser());
     }
 
     // 선택 댓글 삭제
