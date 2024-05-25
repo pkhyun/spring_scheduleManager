@@ -5,6 +5,7 @@ import com.sparta.schedulemanager.dto.LoginRequestDto;
 import com.sparta.schedulemanager.entity.UserRoleEnum;
 import com.sparta.schedulemanager.jwt.JwtUtil;
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
 
 import java.io.IOException;
 
@@ -47,8 +49,16 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         String username = ((UserDetailsImpl) authResult.getPrincipal()).getUsername();
         UserRoleEnum role = ((UserDetailsImpl) authResult.getPrincipal()).getUser().getRole();
 
-        String token = jwtUtil.createToken(username, role);
-        response.addHeader(JwtUtil.AUTHORIZATION_HEADER, token);
+        String token = jwtUtil.createToken(username, role); // 액세스 토큰 생성
+        String refreshToken = jwtUtil.createRefreshToken(username, role); // 리프레시 토큰 생성
+        response.addHeader(JwtUtil.AUTHORIZATION_HEADER, token); // 액세스 토큰을 헤더에 추가
+        // 리프레시 토큰을 쿠키에 저장하여 클라이언트에 전달
+        Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
+        refreshTokenCookie.setHttpOnly(true); // JavaScript로 쿠키 접근 불가
+        refreshTokenCookie.setSecure(true); // HTTPS 연결에서만 쿠키 전송
+        refreshTokenCookie.setMaxAge(12 * 60 * 60); // 리프레시 토큰의 유효 기간 설정 (초 단위)
+        refreshTokenCookie.setPath("/"); // 쿠키 경로 설정
+        response.addCookie(refreshTokenCookie); // 응답에 쿠키 추가
     }
 
     @Override

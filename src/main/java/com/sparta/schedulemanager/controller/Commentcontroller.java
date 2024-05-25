@@ -2,6 +2,7 @@ package com.sparta.schedulemanager.controller;
 
 import com.sparta.schedulemanager.dto.CommentRequestDto;
 import com.sparta.schedulemanager.dto.CommentResponseDto;
+import com.sparta.schedulemanager.entity.Comment;
 import com.sparta.schedulemanager.security.UserDetailsImpl;
 import com.sparta.schedulemanager.service.CommentService;
 import jakarta.validation.Valid;
@@ -10,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -39,6 +42,11 @@ public class Commentcontroller {
         return commentService.deleteComment(id, userDetails.getUser());
     }
 
+    // 선택한 일정의 댓글들 조회
+    @GetMapping("/comment/{scheduleId}")
+    public List<Comment> getComments(@PathVariable int scheduleId) {
+        return commentService.getComments(scheduleId);
+    }
 
     @ExceptionHandler // 에러 핸들링
     private ResponseEntity<String> handleException(IllegalArgumentException e) {

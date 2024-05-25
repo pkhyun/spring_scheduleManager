@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class CommentService {
 
@@ -47,6 +49,13 @@ public class CommentService {
             commentRepository.delete(comment);
             return ResponseEntity.ok("댓글이 삭제되었습니다.");
         } else throw new IllegalArgumentException("본인이 작성한 댓글만 삭제할 수 있습니다.");
+    }
+
+    // 선택한 일정의 댓글들 조회
+    @Transactional
+    public List<Comment> getComments(int scheduleId) {
+        Schedule schedule = findScheduleById(scheduleId);
+        return schedule.getComments();
     }
 
     // id 존재 확인 메서드

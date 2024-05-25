@@ -25,6 +25,7 @@ public class JwtUtil {
     public static final String BEARER_PREFIX = "Bearer ";
     // 토큰 만료시간
     private final long TOKEN_TIME = 60 * 60 * 1000L; // 60분
+    private final long REFRESH_TOKEN_TIME = 12 * 60 * 60 * 1000L; // 12시간
 
     @Value("${jwt.secret.key}") // Base64 Encode 한 SecretKey
     private String secretKey;
@@ -37,7 +38,7 @@ public class JwtUtil {
         key = Keys.hmacShaKeyFor(bytes);
     }
 
-    // 토큰 생성
+    // 액세스 토큰 생성
     public String createToken(String username, UserRoleEnum role) {
         Date date = new Date();
 
@@ -51,6 +52,49 @@ public class JwtUtil {
                         .compact();
     }
 
+    // 리프레시 토큰 생성
+    public String createRefreshToken(String username, UserRoleEnum role) {
+        Date date = new Date();
+
+        return Jwts.builder()
+                .setSubject(username) // 사용자 식별자값(ID)
+                .claim(AUTHORIZATION_KEY, role) // 사용자 권한
+                .setExpiration(new Date(date.getTime() + REFRESH_TOKEN_TIME)) // 만료 시간
+                .setIssuedAt(date) // 발급일
+                .signWith(key, signatureAlgorithm) // 암호화 알고리즘
+                .compact();
+    }
+
+    // 리프레시 토큰을 사용하여 액세스 토큰 생성
+    public String createAccessTokenFromRefreshToken(String refreshToken) {
+        try {
+            // 리프레시 토큰 파싱
+            Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(refreshToken).getBody();
+
+            // 사용자 정보 가져오기
+            String username = claims.getSubject();
+            UserRoleEnum role = (UserRoleEnum) claims.get(AUTHORIZATION_KEY);
+
+            // 액세스 토큰 생성
+            return BEARER_PREFIX +
+                    Jwts.builder()
+                            .setSubject(username) // 사용자 식별자값(ID)
+                            .claim(AUTHORIZATION_KEY, role) // 사용자 권한
+                            .setExpiration(new Date(System.currentTimeMillis() + TOKEN_TIME)) // 만료 시간 (기존의 TOKEN_TIME 값 사용)
+                            .setIssuedAt(new Date()) // 발급일
+                            .signWith(key, signatureAlgorithm) // 암호화 알고리즘
+                            .compact();
+        } catch (ExpiredJwtException e) {
+            // 리프레시 토큰이 만료된 경우
+            log.error("Expired refresh token, 만료된 리프레시 토큰입니다.");
+            return null;
+        } catch (JwtException e) {
+            // 리프레시 토큰이 유효하지 않은 경우
+            log.error("Invalid refresh token, 유효하지 않은 리프레시 토큰입니다.");
+            return null;
+        }
+    }
+
     // header 에서 JWT 가져오기
     public String getJwtFromHeader(HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
@@ -60,15 +104,30 @@ public class JwtUtil {
         return null;
     }
 
-    // 토큰 검증
-    public boolean validateToken(String token) {
+    // 액세스 토큰 검증
+    public boolean validateAccessToken(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            return true;
+        } catch (SecurityException | MalformedJwtException | SignatureException e) {
+            log.error("Invalid JWT signature, 유효하지 않는 JWT 서명 입니다.");
+        } catch (UnsupportedJwtException e) {
+            log.error("Unsupported JWT token, 지원되지 않는 JWT 토큰 입니다.");
+        } catch (IllegalArgumentException e) {
+            log.error("JWT claims is empty, 잘못된 JWT 토큰 입니다.");
+        }
+        return false;
+    }
+
+    // 리프레시 토큰 검증
+    public boolean validateRefreshToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (SecurityException | MalformedJwtException | SignatureException e) {
             log.error("Invalid JWT signature, 유효하지 않는 JWT 서명 입니다.");
         } catch (ExpiredJwtException e) {
-            log.error("Expired JWT token, 만료된 JWT token 입니다.");
+            log.error("Expired JWT token, 만료된 JWT refresh token 입니다.");
         } catch (UnsupportedJwtException e) {
             log.error("Unsupported JWT token, 지원되지 않는 JWT 토큰 입니다.");
         } catch (IllegalArgumentException e) {
