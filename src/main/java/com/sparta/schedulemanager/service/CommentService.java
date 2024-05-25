@@ -24,7 +24,7 @@ public class CommentService {
 
     // 댓글 생성
     public CommentResponseDto createComment(int scheduleId, CommentRequestDto requestDto, User user) {
-        Schedule schedule = scheduleRepository.getReferenceById(scheduleId);
+        Schedule schedule = findScheduleById(scheduleId);
         Comment comment = new Comment(requestDto, schedule, user);
         Comment savedComment = commentRepository.save(comment);
         return new CommentResponseDto(comment);
@@ -37,20 +37,27 @@ public class CommentService {
         if (comment.getUser().getId() == user.getId()) {
             comment.update(requestDto);
             return new CommentResponseDto(comment);
-        } else throw new IllegalArgumentException("본인 댓글만 수정할 수 있습니다.");
+        } else throw new IllegalArgumentException("본인이 작성한 댓글만 수정할 수 있습니다.");
     }
 
     // 댓글 삭제
-    public ResponseEntity<String> deleteComment(int id) {
+    public ResponseEntity<String> deleteComment(int id, User user) {
         Comment comment = findCommentById(id);
-        commentRepository.delete(comment);
-        return ResponseEntity.ok("댓글이 삭제되었습니다.");
+        if (comment.getUser().getId() == user.getId()) {
+            commentRepository.delete(comment);
+            return ResponseEntity.ok("댓글이 삭제되었습니다.");
+        } else throw new IllegalArgumentException("본인이 작성한 댓글만 삭제할 수 있습니다.");
     }
 
     // id 존재 확인 메서드
-
     private Comment findCommentById(int id) {
         return commentRepository.findById(id).orElseThrow(() ->
                 new IllegalArgumentException("해당 댓글을 찾을 수 없습니다."));
+    }
+
+    // 일정 id 존재 확인 메서드
+    private Schedule findScheduleById(int id) {
+        return scheduleRepository.findById(id).orElseThrow(() ->
+                new IllegalArgumentException("해당 스케줄을 찾을 수 없습니다."));
     }
 }

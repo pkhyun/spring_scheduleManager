@@ -35,8 +35,8 @@ public class Commentcontroller {
 
     // 선택 댓글 삭제
     @DeleteMapping("/comment/{id}")
-    public ResponseEntity<String> deleteComment(@PathVariable int id) {
-        return commentService.deleteComment(id);
+    public ResponseEntity<String> deleteComment(@PathVariable int id, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return commentService.deleteComment(id, userDetails.getUser());
     }
 
 
@@ -49,5 +49,6 @@ public class Commentcontroller {
     private ResponseEntity<String> handleException(MethodArgumentNotValidException e) {
         return new ResponseEntity<>(e.getBindingResult().getFieldError().getDefaultMessage(), HttpStatus.BAD_REQUEST);
     }
+
 
 }

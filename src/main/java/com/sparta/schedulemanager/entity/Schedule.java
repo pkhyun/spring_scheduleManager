@@ -31,9 +31,6 @@ public class Schedule {
     @Column(name = "manager", nullable = false, length = 50)
     private String manager;
 
-    @Column(name = "password", nullable = false, length = 50)
-    private String password;
-
     @CreatedDate
     @Column(updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -44,21 +41,24 @@ public class Schedule {
     @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime modifiedAt = LocalDateTime.now();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments;
 
-    public Schedule(ScheduleRequestDto requestDto) {
+    public Schedule(ScheduleRequestDto requestDto, User user) {
         this.title = requestDto.getTitle();
         this.contents = requestDto.getContents();
         this.manager = requestDto.getManager();
-        this.password = requestDto.getPassword();
+        this.user = user;
     }
 
     public void update(ScheduleRequestDto requestDto) {
         this.title = requestDto.getTitle();
         this.contents = requestDto.getContents();
         this.manager = requestDto.getManager();
-        this.password = requestDto.getPassword();
         this.modifiedAt = LocalDateTime.now();
     }
 }
