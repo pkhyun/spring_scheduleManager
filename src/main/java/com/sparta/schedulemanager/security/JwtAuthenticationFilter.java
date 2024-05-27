@@ -54,8 +54,6 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         response.addHeader(JwtUtil.AUTHORIZATION_HEADER, token); // 액세스 토큰을 헤더에 추가
         // 리프레시 토큰을 쿠키에 저장하여 클라이언트에 전달
         Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
-        refreshTokenCookie.setHttpOnly(true); // JavaScript로 쿠키 접근 불가
-        refreshTokenCookie.setSecure(true); // HTTPS 연결에서만 쿠키 전송
         refreshTokenCookie.setMaxAge(12 * 60 * 60); // 리프레시 토큰의 유효 기간 설정 (초 단위)
         refreshTokenCookie.setPath("/"); // 쿠키 경로 설정
         response.addCookie(refreshTokenCookie); // 응답에 쿠키 추가

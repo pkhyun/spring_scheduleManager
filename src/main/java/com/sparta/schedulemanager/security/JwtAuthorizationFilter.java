@@ -44,29 +44,6 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
             Claims info = jwtUtil.getUserInfoFromToken(tokenValue);
 
-            // 액세스 토큰 만료 시간 확인
-            Date expiration = info.getExpiration();
-            Date now = new Date();
-            if (expiration != null && expiration.before(now)) { // 액세스 토큰 만료 여부 파악
-                Cookie[] cookies = req.getCookies();
-                if (cookies != null) {
-                    for (Cookie cookie : cookies) {
-                        if ("refreshToken".equals(cookie.getName())) {
-                            String refreshToken = cookie.getValue();
-                            if (!jwtUtil.validateRefreshToken(refreshToken)) {
-                                log.error("Token Error");
-                                return;
-                            }
-                            // 새로운 액세스 토큰 생성
-                            String newAccessToken = jwtUtil.createAccessTokenFromRefreshToken(refreshToken);
-                            // 새로 생성된 액세스 토큰을 헤더에 추가
-                            res.addHeader(JwtUtil.AUTHORIZATION_HEADER, newAccessToken);
-                            break;
-                        }
-                    }
-                }
-            }
-
             try {
                 setAuthentication(info.getSubject());
             } catch (Exception e) {
