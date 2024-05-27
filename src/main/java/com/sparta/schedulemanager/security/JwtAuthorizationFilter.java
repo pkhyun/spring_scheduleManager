@@ -1,5 +1,6 @@
 package com.sparta.schedulemanager.security;
 
+import com.sparta.schedulemanager.entity.UserRoleEnum;
 import com.sparta.schedulemanager.jwt.JwtUtil;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -38,22 +39,39 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(tokenValue)) {
 
             if (!jwtUtil.validateAccessToken(tokenValue)) {
-                log.error("Token Error");
-                return;
-            }
-
-            Claims info = jwtUtil.getUserInfoFromToken(tokenValue);
-
-            try {
-                setAuthentication(info.getSubject());
-            } catch (Exception e) {
-                log.error(e.getMessage());
-                return;
+                // 토큰이 만료된 경우 리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급
+                String refreshToken = jwtUtil.getRefreshTokenFromCookie(req);
+                if (StringUtils.hasText(refreshToken)) {
+                    Claims refreshTokenInfo = jwtUtil.getUserInfoFromToken(refreshToken);
+                    String username = refreshTokenInfo.getSubject();
+                    if (StringUtils.hasText(username)) {
+                        // 새로운 액세스 토큰 발급
+                        String roleString = refreshTokenInfo.get(JwtUtil.AUTHORIZATION_KEY, String.class);
+                        UserRoleEnum role = null;
+                        if (roleString.equals(UserRoleEnum.Authority.USER)) {
+                            role = UserRoleEnum.USER;
+                        } else if (roleString.equals(UserRoleEnum.Authority.ADMIN)) {
+                            role = UserRoleEnum.ADMIN;
+                        }
+                        String newAccessToken = jwtUtil.createToken(username, role);
+                        res.addHeader(JwtUtil.AUTHORIZATION_HEADER, newAccessToken); // 새로운 액세스 토큰을 헤더에 추가
+                        log.info("새로 발행한 액세스 토큰: {}", newAccessToken);
+                    }
+                }
+            } else {
+                Claims info = jwtUtil.getUserInfoFromToken(tokenValue);
+                try {
+                    setAuthentication(info.getSubject());
+                } catch (Exception e) {
+                    log.error(e.getMessage());
+                    return;
+                }
             }
         }
 
         filterChain.doFilter(req, res);
     }
+
 
     // 인증 처리
     public void setAuthentication(String username) {

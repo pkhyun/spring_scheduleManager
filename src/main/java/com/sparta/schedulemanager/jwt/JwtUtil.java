@@ -25,7 +25,7 @@ public class JwtUtil {
     // Token 식별자
     public static final String BEARER_PREFIX = "Bearer ";
     // 토큰 만료시간
-    private final long TOKEN_TIME = 60 * 60 * 1000L; // 60분
+    private final long TOKEN_TIME = /*60 **/ 20 * 1000L; // 60분
     private final long REFRESH_TOKEN_TIME = 12 * 60 * 60 * 1000L; // 12시간
 
     @Value("${jwt.secret.key}") // Base64 Encode 한 SecretKey
@@ -97,7 +97,7 @@ public class JwtUtil {
         } catch (SecurityException | MalformedJwtException | SignatureException e) {
             log.error("Invalid JWT signature, 유효하지 않는 JWT 서명 입니다.");
         } catch (ExpiredJwtException e) {
-            log.error("Expired JWT token, 만료된 JWT refresh token 입니다.");
+            log.error("Expired JWT token, 만료된 JWT token 입니다.");
         } catch (UnsupportedJwtException e) {
             log.error("Unsupported JWT token, 지원되지 않는 JWT 토큰 입니다.");
         } catch (IllegalArgumentException e) {
