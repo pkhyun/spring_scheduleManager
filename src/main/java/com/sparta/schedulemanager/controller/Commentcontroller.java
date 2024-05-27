@@ -42,11 +42,6 @@ public class Commentcontroller {
         return commentService.deleteComment(id, userDetails.getUser());
     }
 
-    // 선택한 일정의 댓글들 조회
-    @GetMapping("/comment/{scheduleId}")
-    public List<Comment> getComments(@PathVariable int scheduleId) {
-        return commentService.getComments(scheduleId);
-    }
 
     @ExceptionHandler // 에러 핸들링
     private ResponseEntity<String> handleException(IllegalArgumentException e) {
