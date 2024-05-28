@@ -22,6 +22,10 @@ public class Schedule {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @OneToOne
+    @JoinColumn(name = "file_id") // 외래 키
+    private File file;
+
     @Column(name = "title", nullable = false, length = 50)
     private String title;
 
