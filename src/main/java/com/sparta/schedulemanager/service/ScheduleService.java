@@ -8,7 +8,9 @@ import com.sparta.schedulemanager.repository.ScheduleRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -63,6 +65,23 @@ public class ScheduleService {
                 new IllegalArgumentException("해당 스케줄을 찾을 수 없습니다."));
     }
 
+    // 파일 형식 및 크기 제한 확인
+    private void validateFile(MultipartFile file) {
+        List<String> allowedExtensions = Arrays.asList("png", "jpg");
+        String fileExtension = getFileExtension(file);
+        if (!allowedExtensions.contains(fileExtension)) {
+            throw new IllegalArgumentException("파일 형식은 PNG 또는 JPG만 허용됩니다.");
+        }
+        if (file.getSize() > 5 * 1024 * 1024) { // 5MB
+            throw new IllegalArgumentException("파일 크기는 최대 5MB까지 허용됩니다.");
+        }
+    }
+
+    // 파일 확장자 가져오기
+    private String getFileExtension(MultipartFile file) {
+        String originalFileName = file.getOriginalFilename();
+        return originalFileName.substring(originalFileName.lastIndexOf(".") + 1).toLowerCase();
+    }
 
 
 }
