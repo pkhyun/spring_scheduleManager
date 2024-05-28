@@ -5,13 +5,22 @@ import com.sparta.schedulemanager.dto.ScheduleResponseDto;
 import com.sparta.schedulemanager.entity.Schedule;
 import com.sparta.schedulemanager.entity.User;
 import com.sparta.schedulemanager.repository.ScheduleRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ScheduleService {
@@ -83,5 +92,33 @@ public class ScheduleService {
         return originalFileName.substring(originalFileName.lastIndexOf(".") + 1).toLowerCase();
     }
 
+    // 파일 업로드 메서드
+    public String uploadFile(MultipartFile file) {
+        // 파일 유효성 검사
+        validateFile(file);
+
+        String uploadDir = "/path/to/your/upload/directory";
+
+        // 디렉토리가 존재하지 않으면 생성
+        File directory = new File(uploadDir);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        // 파일명 중복을 피하기 위해 UUID로 파일명 생성
+        String fileName = UUID.randomUUID().toString() + "_" + StringUtils.cleanPath(file.getOriginalFilename());
+
+        try {
+            // 파일 저장 경로 설정
+            Path filePath = Paths.get(uploadDir + File.separator + fileName);
+
+            // 파일 복사
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+            return fileName; // 저장된 파일명 반환
+        } catch (IOException ex) {
+            throw new IllegalArgumentException("파일을 업로드하는 중에 오류가 발생했습니다.");
+        }
+    }
 
 }
