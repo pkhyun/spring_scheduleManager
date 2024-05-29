@@ -19,6 +19,4 @@ public class ScheduleRequestDto {
     @Email(message = "이메일 형식이어야 합니다.")
     private String manager;
 
-    @NotBlank(message = "비밀번호를 입력해주세요.")
-    private String password;
 }

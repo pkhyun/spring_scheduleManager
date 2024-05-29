@@ -3,9 +3,7 @@ package com.sparta.schedulemanager.dto;
 import com.sparta.schedulemanager.entity.Schedule;
 import lombok.Getter;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Getter
 public class ScheduleResponseDto {
@@ -13,7 +11,6 @@ public class ScheduleResponseDto {
     private String title;
     private String contents;
     private String manager;
-    private String password;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
 
@@ -22,7 +19,6 @@ public class ScheduleResponseDto {
         this.title = schedule.getTitle();
         this.contents = schedule.getContents();
         this.manager = schedule.getManager();
-        this.password = schedule.getPassword();
         this.createdAt = schedule.getCreatedAt();
         this.modifiedAt = schedule.getModifiedAt();
     }

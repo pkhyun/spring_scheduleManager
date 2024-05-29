@@ -10,6 +10,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -20,35 +21,47 @@ public class Schedule {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    @OneToOne(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
+    private File file;
+
     @Column(name = "title", nullable = false, length = 50)
     private String title;
+
     @Column(name = "contents", nullable = false)
     private String contents;
+
     @Column(name = "manager", nullable = false, length = 50)
     private String manager;
-    @Column(name = "password", nullable = false, length = 50)
-    private String password;
+
     @CreatedDate
     @Column(updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime createdAt = LocalDateTime.now();
+
     @LastModifiedDate
     @Column
     @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime modifiedAt = LocalDateTime.now();
 
-    public Schedule(ScheduleRequestDto requestDto) {
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments;
+
+    public Schedule(ScheduleRequestDto requestDto, User user) {
         this.title = requestDto.getTitle();
         this.contents = requestDto.getContents();
         this.manager = requestDto.getManager();
-        this.password = requestDto.getPassword();
+        this.user = user;
     }
 
     public void update(ScheduleRequestDto requestDto) {
         this.title = requestDto.getTitle();
         this.contents = requestDto.getContents();
         this.manager = requestDto.getManager();
-        this.password = requestDto.getPassword();
         this.modifiedAt = LocalDateTime.now();
     }
 }
