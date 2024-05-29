@@ -1,18 +1,18 @@
 package com.sparta.schedulemanager.service;
 
+import com.sparta.schedulemanager.dto.FileDto;
 import com.sparta.schedulemanager.dto.ScheduleRequestDto;
 import com.sparta.schedulemanager.dto.ScheduleResponseDto;
+import com.sparta.schedulemanager.entity.File;
 import com.sparta.schedulemanager.entity.Schedule;
 import com.sparta.schedulemanager.entity.User;
+import com.sparta.schedulemanager.repository.FileRepository;
 import com.sparta.schedulemanager.repository.ScheduleRepository;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,15 +26,22 @@ import java.util.UUID;
 public class ScheduleService {
 
     private final ScheduleRepository scheduleRepository;
+    private final FileRepository fileRepository;
 
-    public ScheduleService(ScheduleRepository scheduleRepository) {
+    public ScheduleService(ScheduleRepository scheduleRepository, FileRepository fileRepository) {
         this.scheduleRepository = scheduleRepository;
+        this.fileRepository = fileRepository;
     }
 
     // 일정 생성
-    public ScheduleResponseDto createSchedule(ScheduleRequestDto requestDto, User user) {
+    public ScheduleResponseDto createSchedule(ScheduleRequestDto requestDto, User user, MultipartFile file) {
         Schedule schedule = new Schedule(requestDto, user);
         Schedule savedSchedule = scheduleRepository.save(schedule);
+
+        if (file != null && !file.isEmpty()) {
+            uploadFile(file, schedule);
+        }
+
         return new ScheduleResponseDto(schedule);
     }
 
@@ -51,9 +58,16 @@ public class ScheduleService {
 
     //선택 일정 수정
     @Transactional
-    public ScheduleResponseDto updateSchedule(int id, ScheduleRequestDto requestDto, User user) {
+    public ScheduleResponseDto updateSchedule(int id, ScheduleRequestDto requestDto, User user, MultipartFile file) {
         Schedule schedule = findScheduleById(id);
         if (schedule.getUser().getId() == user.getId()) {
+
+            if (file != null && !file.isEmpty()) {
+                if (schedule.getFile() != null) {
+                    updateFile(file, schedule.getFile());
+                }
+            }
+
             schedule.update(requestDto);
             return new ScheduleResponseDto(schedule);
         } else throw new IllegalArgumentException("본인이 작성한 일정만 수정할 수 있습니다.");
@@ -66,13 +80,14 @@ public class ScheduleService {
         if (schedule.getUser().getId() == user.getId()) {
             scheduleRepository.delete(schedule);
             return ResponseEntity.ok("일정이 삭제되었습니다.");
-        }else throw new IllegalArgumentException("본인이 작성한 일정만 삭제할 수 있습니다.");
+        } else throw new IllegalArgumentException("본인이 작성한 일정만 삭제할 수 있습니다.");
     }
 
     private Schedule findScheduleById(int id) { // id 존재 확인 메서드
         return scheduleRepository.findById(id).orElseThrow(() ->
                 new IllegalArgumentException("해당 스케줄을 찾을 수 없습니다."));
     }
+
 
     // 파일 형식 및 크기 제한 확인
     private void validateFile(MultipartFile file) {
@@ -92,33 +107,79 @@ public class ScheduleService {
         return originalFileName.substring(originalFileName.lastIndexOf(".") + 1).toLowerCase();
     }
 
-    // 파일 업로드 메서드
-    public String uploadFile(MultipartFile file) {
-        // 파일 유효성 검사
-        validateFile(file);
+    // 파일 업로드
+    public FileDto uploadFile(MultipartFile multipartFile, Schedule schedule) {
+        validateFile(multipartFile);
 
-        String uploadDir = "/path/to/your/upload/directory";
+        String originalFileName = multipartFile.getOriginalFilename();
+        String fileExtension = getFileExtension(multipartFile);
+        int fileSize = (int) multipartFile.getSize();
 
-        // 디렉토리가 존재하지 않으면 생성
-        File directory = new File(uploadDir);
-        if (!directory.exists()) {
-            directory.mkdirs();
+        // 고유한 파일 이름 생성
+        String uniqueFileName = UUID.randomUUID().toString() + "." + fileExtension;
+        Path uploadDir = Paths.get("uploads");
+
+        // 디렉토리 존재 여부 확인 및 생성
+        if (Files.notExists(uploadDir)) {
+            try {
+                Files.createDirectories(uploadDir);
+            } catch (IOException e) {
+                throw new RuntimeException("업로드 디렉토리 생성 실패: " + uploadDir, e);
+            }
         }
 
-        // 파일명 중복을 피하기 위해 UUID로 파일명 생성
-        String fileName = UUID.randomUUID().toString() + "_" + StringUtils.cleanPath(file.getOriginalFilename());
+        Path filePath = uploadDir.resolve(uniqueFileName);
 
         try {
-            // 파일 저장 경로 설정
-            Path filePath = Paths.get(uploadDir + File.separator + fileName);
-
-            // 파일 복사
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-            return fileName; // 저장된 파일명 반환
-        } catch (IOException ex) {
-            throw new IllegalArgumentException("파일을 업로드하는 중에 오류가 발생했습니다.");
+            // 파일 저장
+            Files.copy(multipartFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new RuntimeException("파일 저장 실패: " + originalFileName, e);
         }
+
+        File file = new File(originalFileName, fileExtension, fileSize, filePath.toString(), schedule);
+        File uploadedFile = fileRepository.save(file);
+        return new FileDto(uploadedFile);
     }
+
+    // 파일 업데이트
+    private void updateFile(MultipartFile multipartFile, File existingFile) {
+        validateFile(multipartFile);
+
+        String originalFileName = multipartFile.getOriginalFilename();
+        String fileExtension = getFileExtension(multipartFile);
+        int fileSize = (int) multipartFile.getSize();
+
+        // 기존 파일 정보를 업데이트
+        existingFile.setFileName(originalFileName);
+        existingFile.setFileExtension(fileExtension);
+        existingFile.setFileSize(fileSize);
+
+        // 파일 업로드 디렉토리
+        Path uploadDir = Paths.get("uploads");
+
+        // 디렉토리 존재 여부 확인 및 생성
+        if (Files.notExists(uploadDir)) {
+            try {
+                Files.createDirectories(uploadDir);
+            } catch (IOException e) {
+                throw new RuntimeException("업로드 디렉토리 생성 실패: " + uploadDir, e);
+            }
+        }
+
+        // 기존 파일의 경로를 유지하며 파일 업데이트
+        Path filePath = Paths.get(existingFile.getFilePath());
+        try {
+            // 기존 파일을 업데이트
+            Files.copy(multipartFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new RuntimeException("파일 업데이트 실패: " + originalFileName, e);
+        }
+
+        // 파일 정보 업데이트
+        existingFile.setFilePath(filePath.toString());
+        fileRepository.save(existingFile);
+    }
+
 
 }

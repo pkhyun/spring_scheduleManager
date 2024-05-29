@@ -4,19 +4,22 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
-@NoArgsConstructor
+
 @Getter
 @Setter
 @Entity
-@Table(name = "files")
+@Table(name = "file")
+@NoArgsConstructor
 public class File {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(mappedBy = "file", cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "schedule_id", nullable = false)
     private Schedule schedule;
 
     @Column(name = "file_name")
@@ -31,11 +34,12 @@ public class File {
     @Column(name = "file_path")
     private String filePath; // 파일 경로 추가
 
-    public File(String fileName, String fileExtension, Integer fileSize, String filePath) {
+    public File(String fileName, String fileExtension, Integer fileSize, String filePath, Schedule schedule) {
         this.fileName = fileName;
         this.fileExtension = fileExtension;
         this.fileSize = fileSize;
         this.filePath = filePath;
+        this.schedule = schedule;
     }
 
 

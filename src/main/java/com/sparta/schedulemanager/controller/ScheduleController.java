@@ -6,10 +6,12 @@ import com.sparta.schedulemanager.security.UserDetailsImpl;
 import com.sparta.schedulemanager.service.ScheduleService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -25,8 +27,10 @@ public class ScheduleController {
 
     // 일정 생성
     @PostMapping("/schedule")
-    public ScheduleResponseDto createSchedule(@Valid @RequestBody ScheduleRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return scheduleService.createSchedule(requestDto, userDetails.getUser());
+    public ScheduleResponseDto createSchedule(@RequestPart(value = "file", required = false) MultipartFile file,
+                                              @Valid @RequestPart(value = "requestDto") ScheduleRequestDto requestDto,
+                                              @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return scheduleService.createSchedule(requestDto, userDetails.getUser(), file);
     }
 
     // 선택 일정 조회
@@ -43,8 +47,11 @@ public class ScheduleController {
 
     // 선택 일정 수정
     @PutMapping("/schedule/{id}")
-    public ScheduleResponseDto updateSchedule(@PathVariable int id, @Valid @RequestBody ScheduleRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return scheduleService.updateSchedule(id, requestDto, userDetails.getUser());
+    public ScheduleResponseDto updateSchedule(@PathVariable int id,
+                                              @RequestPart(value = "file", required = false) MultipartFile file,
+                                              @Valid @RequestPart ScheduleRequestDto requestDto,
+                                              @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return scheduleService.updateSchedule(id, requestDto, userDetails.getUser(), file);
     }
 
     // 선택 일정 삭제
@@ -62,5 +69,11 @@ public class ScheduleController {
     private ResponseEntity<String> handleException(MethodArgumentNotValidException e) {
         return new ResponseEntity<>(e.getBindingResult().getFieldError().getDefaultMessage(), HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler
+    private ResponseEntity<String> handleException(RuntimeException e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
 
 }

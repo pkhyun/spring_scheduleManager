@@ -2,6 +2,7 @@ package com.sparta.schedulemanager.dto;
 
 
 import com.sparta.schedulemanager.entity.File;
+import com.sparta.schedulemanager.entity.Schedule;
 import lombok.Getter;
 
 @Getter
